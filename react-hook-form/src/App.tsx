@@ -3,16 +3,26 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 const formSchema = z.object({
-  firstname: z.string().nonempty(),
-  lastname: z.string().nonempty(),
+  firstname: z.string().nonempty("First Name must not be empty"),
+  lastname: z.string().nonempty("Last Name must not be empty"),
   email: z.string().email(),
-  phone: z.string().length(10),
-  idnumber: z.string().length(13),
+  phone: z.string().length(10, "Phone number must be exactly 10 digits"),
+  idnumber: z.string().length(13 , "ID must be exactly 13 digits"),
   age: z.string().refine((val) => !Number.isNaN(parseInt(val, 10)), {
-    message: "Expected number, received a string",
+    message: "Age must not be empty",
+  })
+  .transform((val) => parseInt(val, 10))
+  .refine((num) => num >= 10 && num <= 95, {
+    message: "Age must be between 10 and 95",
   }),
-  gender: z.enum(["Male", "Female", "Non-binary", "Prefer not to say"]),
-  country: z.enum(["Thailand", "Russia", "China", "North Korea"]),
+  gender: z.string()
+  .refine(val => ['Male', "Female", "Non-binary", "Prefer not to say"].includes(val), {
+    message: "Please select a gender option",
+  }),
+  country: z.string()
+  .refine(val => ["Thailand", "Russia", "China", "North Korea"].includes(val), {
+    message: "Please select a country option",
+  }),
   birthdate: z.coerce.date().refine(
     (date) => {
       const today = new Date();
@@ -45,6 +55,7 @@ export default function ResponsiveForm() {
   const {
     register,
     handleSubmit,
+    reset, 
     formState: { errors },
   } = useForm({
     resolver: zodResolver(formSchema),
@@ -63,9 +74,11 @@ export default function ResponsiveForm() {
     },
   });
 
-  const onSubmit = handleSubmit((data) => {
-    console.log(data);
+  const onSubmit = handleSubmit(() => {
+    alert("Form submitted!");
+    reset();
   });
+
   return (
     <div className="py-12 flex items-center justify-center">
       <div className="max-w-7xl w-full mx-auto p-4 sm:p-6">
