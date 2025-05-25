@@ -6,7 +6,7 @@ const formSchema = z.object({
   firstname: z.string().trim().nonempty("First Name must not be empty"),
   lastname: z.string().nonempty("Last Name must not be empty"),
   email: z.string().nonempty().email(),
-  phone: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
+  phone: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits and only numbers"),
   idnumber: z.string().length(13 , "ID must be exactly 13 digits"),
   age: z.string().refine((val) => !Number.isNaN(parseInt(val, 10)), {
     message: "Age must not be empty",
