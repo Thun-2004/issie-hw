@@ -3,10 +3,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 const formSchema = z.object({
-  firstname: z.string().nonempty("First Name must not be empty"),
+  firstname: z.string().trim().nonempty("First Name must not be empty"),
   lastname: z.string().nonempty("Last Name must not be empty"),
-  email: z.string().email(),
-  phone: z.string().length(10, "Phone number must be exactly 10 digits"),
+  email: z.string().nonempty().email(),
+  phone: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
   idnumber: z.string().length(13 , "ID must be exactly 13 digits"),
   age: z.string().refine((val) => !Number.isNaN(parseInt(val, 10)), {
     message: "Age must not be empty",
@@ -42,14 +42,30 @@ const formSchema = z.object({
       message: "Age must be between 10 and 95 years old",
     }
   ),
-  password: z.string().regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/,
+  password: z.string().min(8, "Password must be at least 8 characters").regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/,
   "Password must contain at least 1 uppercase,1 lowercase letter, and 1 number"),
   confirmpassword: z.string().regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/,
   "Password must contain at least 1 uppercase,1 lowercase letter, and 1 number"),
-}).refine((data) => data.password === data.confirmpassword, {
-  message: "Passwords don't match",
-  path: ["confirmpassword"],
-});
+}).superRefine((data, ctx) => {
+  if (data.password !== data.confirmpassword) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Passwords don't match",
+      path: ["confirmpassword"],
+    });
+  }
+  const today = new Date();
+  const realAge = today.getFullYear() - data.birthdate.getFullYear();
+  if (realAge !== data.age) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Age does not match birthdate",
+      path: ["age"],
+    });
+  }
+  
+})
+
 
 export default function ResponsiveForm() {
   const {
